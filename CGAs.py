@@ -1,6 +1,6 @@
 #Khai báo thư viện Random
 import random
-#Dữ liệu bài toán
+#--------------------------   --[DATA]---------------------------------------
 values = [
     [   # Layer 0
         [1, 3, 4, 1],
@@ -18,8 +18,8 @@ values = [
         [99, 99, 99, 99]
     ]
 ]
-
-    #Xây dựng hàm đọc dữ liệu - READ DATA
+#------------------------------[FUNCTION]------------------------------------
+#Xây dựng hàm đọc dữ liệu - READ DATA
 def Data(value):
     nj = len(value)         #số Job
     no = len(value[0])      #Số thao tác mỗi Job
@@ -32,8 +32,8 @@ def Data(value):
     return D
 
 
-    #Xây dựng hàm tìm kiếm địa phương - APPROACH BY LOCALIZATION
-def assignment(Data):
+#Xây dựng hàm tìm kiếm địa phương - APPROACH BY LOCALIZATION
+def gen(Data):
     x = len(Data)
     y = len(Data[0])
     z = len(Data[0][0])
@@ -62,11 +62,11 @@ def assignment(Data):
                     D2[w][q][position] = D2[w][q][position] + D[i][j][position]
     return S
 class JSP:
-    def __init__(self, assignment):
-        self.assignment = assignment
+    def __init__(self, gen):
+        self.gen = gen
     #Xây dựng biểu đồ kế hoạch - ASSIGNMENT SCHEMATA
     def schemata(self):
-        S = self.assignment
+        S = self.gen
         x = len(S)
         y = len(S[0])
         z = len(S[0][0])
@@ -87,7 +87,7 @@ class JSP:
                 print(f"J{[i+1]}{[j+1]}:", S2[i][j])
     #Xây dựng hàm đánh giá - EVALUATION
     def makespans(self):
-        S = self.assignment
+        S = self.gen
         x = len(S)
         y = len(S[0])
         z = len(S[0][0])
@@ -105,7 +105,7 @@ class JSP:
                         Wk[k] = Wk[k] + D[i][j][k]
         return max(t)
     def workloads(self):
-        S = self.assignment()
+        S = self.gen
         x = len(self.Data)
         y = len(self.Data[0])
         z = len(self.Data[0][0])
@@ -124,23 +124,56 @@ class JSP:
             for i in range(x):
                 W = W + Wk[i]
         return W
+# Xây dựng quần thể
+def chromosome(Data_Input,target,loop):
+    nE = [[0 for k in range(2)] for j in range(target)]
+    x = len(Data_Input)
+    y = len(Data_Input[0])
+    z = len(Data_Input[0][0])
+    n = 0
+    n_while = 0
+    while n< target:
+        if n == 0:
+            nE[n][0] = gen(Data_Input)
+            n = n+1
+        else:
+            size = 0
+            compare = 0
+            value = gen(Data_Input)
+            for l in range(0,n):
+                for i in range(x):
+                    for j in range(y):
+                        for k in range(z):
+                            if value[i][j][k] == nE[l][0][i][j][k]:
+                                size = size + 1
+                if size == x*y*z:
+                    compare = compare +1
+                else:
+                    size = 0
+            if compare == 0:
+                nE[n][0] = value
+                n = n+1
+            else:
+                n_while = n_while + 1
+        if n_while == loop:
+            break
+    E = [[0 for k in range(2)] for j in range(n)]
+    for i in range(n):
+        E[i][0] = nE[i][0]
+    for i in range(n):
+        a = JSP(E[i][0])
+        E[i][1] = a.makespans()
+    E1 = sorted(E, key=lambda tup: tup[1])
+    return E1
+
+#-----------------------------[MAIN]--------------------------------------------------------
+
 D = Data(values)
-x = len(D)
-y = len(D[0])
-z = len(D[0][0])
-# Khai báo quy mô quần thể
-ps = 5
-# Tạo một quần thể bao gồm 100 cá thể
-E = [[0 for k in range(2)] for j in range(ps)]
-for i in range(ps):
-    E[i][0] = assignment(D)
-    a = JSP(E[i][0])
-    E[i][1] = a.makespans()
-for i in range(ps):
-    print(E[i])
-# Sắp xếp lại quần thể theo thứ tự tối ưu
-E1 = sorted(E, key=lambda tup: tup[1])
-# In mảng sau khi đã sắp xếp
+E = chromosome(D,10,1000)
+for i in range(len(E)):
+    print(f"E{[i+1]}:\n", E[i])
+
+
+
 print("--------------------------------")
-for i in range(ps):
-    print(E1[i])
+#-----------------------------[END]---------------------------------------------------------
