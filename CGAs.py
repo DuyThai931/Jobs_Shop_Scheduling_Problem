@@ -1,23 +1,4 @@
-#Khai báo thư viện Random
 import random
-#--------------------------   --[DATA]---------------------------------------
-values = [
-    [   # Layer 0
-        [1, 3, 4, 1],
-        [3, 8, 2, 1],
-        [3, 5, 4, 7]
-    ],
-    [   # Layer 1
-        [4, 1, 1, 4],
-        [2, 3, 9, 3],
-        [9, 1, 2, 2]
-    ],
-    [   # Layer 2
-        [8, 6, 3, 5],
-        [4, 5, 8, 1],
-        [99, 99, 99, 99]
-    ]
-]
 #------------------------------[FUNCTION]------------------------------------
 #Xây dựng hàm đọc dữ liệu - READ DATA
 def Data(value):
@@ -167,13 +148,28 @@ def chromosome(Data_Input,target,loop):
     return E1
 
 #-----------------------------[MAIN]--------------------------------------------------------
-
-D = Data(values)
-E = chromosome(D,10,1000)
+values = [
+    [   # Layer 0
+        [1, 3, 4, 1],
+        [3, 8, 2, 1],
+        [3, 5, 4, 7]
+    ],
+    [   # Layer 1
+        [4, 1, 1, 4],
+        [2, 3, 9, 3],
+        [9, 1, 2, 2]
+    ],
+    [   # Layer 2
+        [8, 6, 3, 5],
+        [4, 5, 8, 1],
+        [99, 99, 99, 99]
+    ]
+]
+D = Data(values)    #Đưa dữ liệu vào mảng D
+E = chromosome(D,10,1000)    #Xây dựng quần thể (bộ nhiễm sắc thể choromosome(dữ liệu vào, số lượng gen mong muốn, số vòng lặp random))
 for i in range(len(E)):
-    print(f"E{[i+1]}:\n", E[i])
-
-
-
+    print(f"S{[i+1]}:\n", E[i])
 print("--------------------------------")
+E1 = JSP(E[0][0])    #Xây dựng các đặc tính của gen
+E11 = E1.schemata()  #In ra bảng lược đồ kế hoạch
 #-----------------------------[END]---------------------------------------------------------
