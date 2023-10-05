@@ -11,8 +11,6 @@ def Data(value):
             for k in range(nm):
                 D[i][j][k] = value[i][j][k]
     return D
-
-
 #Xây dựng hàm tìm kiếm địa phương - APPROACH BY LOCALIZATION
 def gen(Data):
     x = len(Data)
@@ -85,6 +83,24 @@ class JSP:
                         m[k] = max(t[i], m[k])
                         Wk[k] = Wk[k] + D[i][j][k]
         return max(t)
+    def processing_time(self):
+        S = self.gen
+        x = len(S)
+        y = len(S[0])
+        z = len(S[0][0])
+        t = [0]*x
+        m = [0]*z
+        Wk = [0]*z
+        S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
+        for j in range(y):
+            for i in range(x):
+                for k in range(z):
+                    if S[i][j][k] == 1:
+                        S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
+                        t[i] = max(t[i], m[k]) + D[i][j][k]
+                        m[k] = max(t[i], m[k])
+                        Wk[k] = Wk[k] + D[i][j][k]
+        return t
     def workloads(self):
         S = self.gen
         x = len(self.Data)
@@ -105,7 +121,7 @@ class JSP:
             for i in range(x):
                 W = W + Wk[i]
         return W
-# Xây dựng quần thể
+# Xay dung quan the
 def chromosome(Data_Input,target,loop):
     nE = [[0 for k in range(2)] for j in range(target)]
     x = len(Data_Input)
@@ -147,29 +163,85 @@ def chromosome(Data_Input,target,loop):
     E1 = sorted(E, key=lambda tup: tup[1])
     return E1
 
+#Xay dung ham Crossover
+def crossover(D,E):
+    a = random.randint(0,len(E)-1)
+    b = random.randint(0,len(E)-1)
+    while a == b:
+        b = random.randint(0,len(E)-1)
+    S1 = E[a][0]
+    S2 = E[b][0]
+    # Lựa chọn vị trí lai ghép
+    i1 = i2 = j1 = j2 = 0
+    while i1 >= i2:
+        i1 = random.randint(0,len(D)-1)
+        i2 = random.randint(0,len(D)-1)
+        j1 = random.randint(0,len(D[0])-1)
+        j2 = random.randint(0,len(D[0])-1)
+        while i1 == i2 and j1 > j2:
+            j1 = random.randint(0,len(D[0])-1)
+            j2 = random.randint(0,len(D[0])-1)
+    C1 = [[[0 for k in range(len(D[0][0]))] for j in range(len(D[0]))] for i in range(len(D))]
+    C2 = [[[0 for k in range(len(D[0][0]))] for j in range(len(D[0]))] for i in range(len(D))]
+    for a in range(0, i1):
+        C1[a] = S2[a]
+        C2[a] = S1[a]
+    for a in range(i1+1, i2):
+        C1[a] = S1[a]
+        C2[a] = S2[a]
+    for a in range(i2+1, len(D)):
+        C2[a] = S1[a]
+        C1[a] = S2[a]
+    if i1 < i2:
+        for b in range(0,j1):
+            C1[i1][b] = S2[i1][b]
+            C2[i1][b] = S1[i1][b]
+        for b in range(j1,len(D[0])):
+            C1[i1][b] = S1[i1][b]
+            C2[i1][b] = S2[i1][b]
+        for b in range(0,j2+1):
+            C1[i2][b] = S1[i2][b]
+            C2[i2][b] = S2[i2][b]
+        for b in range(j2+1,len(D[0])):
+            C1[i2][b] = S2[i2][b]
+        C2[i2][b] = S1[i2][b]
+    return [C1,C2]
+# Xây dựng hàm đột biến
+def mutation1(E):
+    a = random.randint(0,len(E)-1)
+    S = E[a][0]
+    value_S = JSP(S)
+    t = value_S.processing_time()
+    print("Processing Time per Jobs:", t)
+    max_pt = max(t)
+    i = t.index(max_pt)
+    print("jobs have processing time max:", i+1)
 #-----------------------------[MAIN]--------------------------------------------------------
 values = [
-    [   # Layer 0
-        [1, 3, 4, 1],
-        [3, 8, 2, 1],
-        [3, 5, 4, 7]
-    ],
-    [   # Layer 1
-        [4, 1, 1, 4],
-        [2, 3, 9, 3],
-        [9, 1, 2, 2]
-    ],
-    [   # Layer 2
-        [8, 6, 3, 5],
-        [4, 5, 8, 1],
-        [99, 99, 99, 99]
+        [   # Layer 0
+            [1, 3, 4, 1],
+            [3, 8, 2, 1],
+            [3, 5, 4, 7]
+        ],
+        [   # Layer 1
+            [4, 1, 1, 4],
+            [2, 3, 9, 3],
+            [9, 1, 2, 2]
+        ],
+        [   # Layer 2
+            [8, 6, 3, 5],
+            [4, 5, 8, 1],
+            [99, 99, 99, 99]
+        ]
     ]
-]
+n = 10
 D = Data(values)    #Đưa dữ liệu vào mảng D
-E = chromosome(D,10,1000)    #Xây dựng quần thể (bộ nhiễm sắc thể choromosome(dữ liệu vào, số lượng gen mong muốn, số vòng lặp random))
-for i in range(len(E)):
-    print(f"S{[i+1]}:\n", E[i])
-print("--------------------------------")
-E1 = JSP(E[0][0])    #Xây dựng các đặc tính của gen
-E11 = E1.schemata()  #In ra bảng lược đồ kế hoạch
+E = chromosome(D,100,1000)    #Xây dựng quần thể (bộ nhiễm sắc thể choromosome(dữ liệu vào, số lượng gen mong muốn, số vòng lặp random))
+P1 = E[:n]
+C = [0 for k in range(n)]
+for i in range(0,n,2):
+    F = crossover(D,P1)
+    C[i] = F[0]
+    C[i+1] = F[1]
+mutation1(P1)
 #-----------------------------[END]---------------------------------------------------------
