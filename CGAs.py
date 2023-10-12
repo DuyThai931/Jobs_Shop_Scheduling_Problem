@@ -1,11 +1,6 @@
 import random
 import copy
 #------------------------------[FUNCTION]------------------------------------
-def deep_copy(arr):
-    if isinstance(arr, list):
-        return [deep_copy(item) for item in arr]
-    else:
-        return arr
 #Xây dựng hàm đọc dữ liệu - READ DATA
 def Data(value):
     nj = len(value)         #số Job
@@ -46,9 +41,46 @@ def gen(Data):
                 for q in range(y):
                     D2[w][q][position] = D2[w][q][position] + D[i][j][position]
     return S
+# cach tao gen 2
+def gen2(Data):
+    x = len(Data)
+    y = len(Data[0])
+    z = len(Data[0][0])
+    D_2 = [[[D[i][j][k] for k in range(z)] for j in range(y)] for i in range(x)]
+    S_2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
+    w = 1
+    while w <= x*y:
+        min = 99
+        r = random.randint(0,z-1)
+        PositionK = r
+        for i in range(len(D_2)):
+            for j in range(len(D_2[i])):
+                for k in range(r, z):
+                    if D_2[i][j][k] < min and D_2[i][j][k] != 0:
+                        min = D_2[i][j][k]
+                        PositionK = k
+                        PositionI = i
+                        PositionJ = j
+                for k in range(0,r):
+                    if D_2[i][j][k] < min and D_2[i][j][k] != 0:
+                        min = D_2[i][j][k]
+                        PositionK = k
+                        PositionI = i
+                        PositionJ = j
+        if min < 99:
+            S_2[PositionI][PositionJ][PositionK] = 1
+        D_2[PositionI][PositionJ] = [0 for i in range(len(D_2[0][0]))]
+        for i in range(len(D_2)):
+            for j in range(len(D_2[i])):
+                if D_2[i][j][PositionK] != 0:
+                    D_2[i][j][PositionK] = D_2[i][j][PositionK] + Data[PositionI][PositionJ][PositionK]
+        w += 1
+    return S_2
+#Ham danh gia
 class JSP:
-    def __init__(self, gen):
+    def __init__(self,gen):
         self.gen = gen
+        self.t = None
     #Xây dựng biểu đồ kế hoạch - ASSIGNMENT SCHEMATA
     def schemata(self):
         S = self.gen
@@ -60,16 +92,24 @@ class JSP:
         Wk = [0]*z
         S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
         for j in range(y):
+            E1 = [0 for _ in range(x)]
             for i in range(x):
                 for k in range(z):
                     if S[i][j][k] == 1:
-                        S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
-                        t[i] = max(t[i], m[k]) + D[i][j][k]
-                        m[k] = max(t[i], m[k])
-                        Wk[k] = Wk[k] + D[i][j][k]
+                        E1[i] = [i,k,D[i][j][k]]
+            E1 = [item for item in E1 if item != 0]
+            E1 = sorted(E1, key=lambda x: x[2])
+            for r in range(len(E1)):
+                i = E1[r][0]
+                k = E1[r][1]
+                S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
+                t[i] = max(t[i], m[k]) + D[i][j][k]
+                m[k] = max(t[i], m[k])
+                Wk[k] = Wk[k] + D[i][j][k]
         for i in range(x):
             for j in range(y):
                 print(f"J{[i+1]}{[j+1]}:", S2[i][j])
+    
     #Xây dựng hàm đánh giá - EVALUATION
     def makespans(self):
         S = self.gen
@@ -81,14 +121,21 @@ class JSP:
         Wk = [0]*z
         S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
         for j in range(y):
+            E1 = [0 for _ in range(x)]
             for i in range(x):
                 for k in range(z):
                     if S[i][j][k] == 1:
-                        S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
-                        t[i] = max(t[i], m[k]) + D[i][j][k]
-                        m[k] = max(t[i], m[k])
-                        Wk[k] = Wk[k] + D[i][j][k]
-        return max(t)
+                        E1[i] = [i,k,D[i][j][k]]
+            E1 = [item for item in E1 if item != 0]
+            E1 = sorted(E1, key=lambda x: x[2])
+            for r in range(len(E1)):
+                i = E1[r][0]
+                k = E1[r][1]
+                S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
+                t[i] = max(t[i], m[k]) + D[i][j][k]
+                m[k] = max(t[i], m[k])
+                Wk[k] = Wk[k] + D[i][j][k]
+        return(max(t))
     def processing_time(self):
         S = self.gen
         x = len(S)
@@ -99,34 +146,46 @@ class JSP:
         Wk = [0]*z
         S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
         for j in range(y):
+            E1 = [0 for _ in range(x)]
             for i in range(x):
                 for k in range(z):
                     if S[i][j][k] == 1:
-                        S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
-                        t[i] = max(t[i], m[k]) + D[i][j][k]
-                        m[k] = max(t[i], m[k])
-                        Wk[k] = Wk[k] + D[i][j][k]
+                        E1[i] = [i,k,D[i][j][k]]
+            E1 = [item for item in E1 if item != 0]
+            E1 = sorted(E1, key=lambda x: x[2])
+            for r in range(len(E1)):
+                i = E1[r][0]
+                k = E1[r][1]
+                S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
+                t[i] = max(t[i], m[k]) + D[i][j][k]
+                m[k] = max(t[i], m[k])
+                Wk[k] = Wk[k] + D[i][j][k]
         return t
     def workloads(self):
         S = self.gen
-        x = len(self.S)
-        y = len(self.S[0])
-        z = len(self.S[0][0])
+        x = len(S)
+        y = len(S[0])
+        z = len(S[0][0])
         t = [0]*x
         m = [0]*z
         Wk = [0]*z
         S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
         for j in range(y):
+            E1 = [0 for _ in range(x)]
             for i in range(x):
                 for k in range(z):
                     if S[i][j][k] == 1:
-                        S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
-                        t[i] = max(t[i], m[k]) + D[i][j][k]
-                        m[k] = max(t[i], m[k])
-                        Wk[k] = Wk[k] + D[i][j][k]
-            for i in range(x):
-                W = W + Wk[i]
-        return W
+                        E1[i] = [i,k,D[i][j][k]]
+            E1 = [item for item in E1 if item != 0]
+            E1 = sorted(E1, key=lambda x: x[2])
+            for r in range(len(E1)):
+                i = E1[r][0]
+                k = E1[r][1]
+                S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
+                t[i] = max(t[i], m[k]) + D[i][j][k]
+                m[k] = max(t[i], m[k])
+                Wk[k] = Wk[k] + D[i][j][k]
+        return sum(Wk)
     def workloads_per_machine(self):
         S = self.gen
         x = len(S)
@@ -137,56 +196,50 @@ class JSP:
         Wk = [0]*z
         S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
         for j in range(y):
+            E1 = [0 for _ in range(x)]
             for i in range(x):
                 for k in range(z):
                     if S[i][j][k] == 1:
-                        S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
-                        t[i] = max(t[i], m[k]) + D[i][j][k]
-                        m[k] = max(t[i], m[k])
-                        Wk[k] = Wk[k] + D[i][j][k]
+                        E1[i] = [i,k,D[i][j][k]]
+            E1 = [item for item in E1 if item != 0]
+            E1 = sorted(E1, key=lambda x: x[2])
+            for r in range(len(E1)):
+                i = E1[r][0]
+                k = E1[r][1]
+                S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
+                t[i] = max(t[i], m[k]) + D[i][j][k]
+                m[k] = max(t[i], m[k])
+                Wk[k] = Wk[k] + D[i][j][k]
         return Wk
 # Xay dung quan the
-def chromosome(Data_Input,target,loop):
-    nE = [[0 for k in range(2)] for j in range(target)]
-    x = len(Data_Input)
-    y = len(Data_Input[0])
-    z = len(Data_Input[0][0])
+def chromosome(Data_Input,loop):
+    nE = []
     n = 0
-    n_while = 0
-    while n < target:
-        if n == 0:
-            nE[n][0] = gen(Data_Input)
-            n = n+1
+    n2 = 0
+    dao_gen = 0
+    while n < loop:
+        EE = []
+        EE = gen(Data_Input)
+        if EE not in nE :
+            nE.append(EE)
+            n = 0
         else:
-            size = 0
-            compare = 0
-            value = gen(Data_Input)
-            for l in range(0,n):
-                for i in range(x):
-                    for j in range(y):
-                        for k in range(z):
-                            if value[i][j][k] == nE[l][0][i][j][k]:
-                                size = size + 1
-                if size == x*y*z:
-                    compare = compare +1
-                else:
-                    size = 0
-            if compare == 0:
-                nE[n][0] = value
-                n = n+1
-            else:
-                n_while = n_while + 1
-        if n_while == loop:
-            break
-    E = [[0 for k in range(2)] for j in range(n)]
-    for i in range(n):
-        E[i][0] = nE[i][0]
-    for i in range(n):
+            n += 1
+    while n2 < loop:
+        EE = []
+        EE = gen2(Data_Input)
+        if EE not in nE :
+            nE.append(EE)
+            n2 = 0
+        else:
+            n2 += 1
+    E = [[0 for k in range(2)] for j in range(len(nE))]
+    for i in range(len(nE)):
+        E[i][0] = nE[i]
         a = JSP(E[i][0])
         E[i][1] = a.makespans()
     E1 = sorted(E, key=lambda tup: tup[1])
     return E1
-
 #Xay dung ham Crossover
 def crossover(D,E):
     a = random.randint(0,len(E)-1)
@@ -281,16 +334,20 @@ def mutation2(E):
         for j in range(position,len(S[0])):
             if S[i][j][k1] == 1:
                 r = 1
+                positioni = i
+                positionj = j
             else:
                 r = 0
         if r == 0:
             for j in range(0, position):
                 if S[i][j][k1] == 1:
                     r = 1
+                    positioni = i
+                    positionj = j
                 else:
                     r = 0
-    S[i][j][k1] = 0
-    S[i][j][k2] = 1
+    S[positioni][positionj][k1] = 0
+    S[positioni][positionj][k2] = 1
     return S
 #-----------------------------[MAIN]--------------------------------------------------------
 values = [
@@ -312,7 +369,9 @@ values = [
     ]
 #Lựa chọn kích thước quần thể
 D = Data(values)    #Đưa dữ liệu vào mảng D
-E = chromosome(D,10,1000)    #Xây dựng quần thể (bộ nhiễm sắc thể choromosome(dữ liệu vào, số lượng gen mong muốn, số vòng lặp random))
+E = chromosome(D,10000)    #Xây dựng quần thể (bộ nhiễm sắc thể choromosome(dữ liệu vào, số lượng gen mong muốn, số vòng lặp random))
+print(len(E))
+print("______________________________")
 n = 10
 c = 8
 m1 = 1
@@ -321,12 +380,7 @@ x = 1
 #Lựa chọn quần thể
 Q = E[:n]
 #Lai ghép
-while x <= 20:
-    #print(f"Thế hệ thứ {x}:")
-    #print("Bộ nhiễm sắc thể ban đầu:")
-    #for i in range(len(Q)):
-        #print(Q[i])
-    #print("-------------------------")
+while x <= 2000:
     QQ = copy.deepcopy(Q)
     #Đột biến kiểu 1
     M1 = [0 for j in range(m1)]
@@ -345,34 +399,33 @@ while x <= 20:
     #Gộp các tổ hợp
     C1.extend(M1)
     C1.extend(M2)
-    #Gop cac phan tu tao ra voi phan tu ban dau
-    #print("Gop C vs M1 vs M2:")
-    #Gộp Q với các phần tử được tạo ra
+    # Tạo mảng Q2 bao gồm cả chỉ số đánh giá Makespans
     Q2 = [[0 for j in range(2)] for k in range(n)]
     for i3 in range(len(Q2)):
         Q2[i3][0] = C1[i3]
         Q2[i3][1] = JSP(C1[i3]).makespans()
-    #for i4 in range(len(Q2)):
-        #print(Q2[i4])
-    #print("-------------------------")
+    # Gộp G2 vào tập quần thể ban đầu
     Q2.extend(QQ)
-    #for i2 in range(len(Q2)):
-        #print(Q2[i2])
-    #print("-------------------------")
+    # Sắp xếp các phần tử tỏng Q2 theo thứ tự tăng dần Cmax
     QQ2 = sorted(Q2, key=lambda tup: tup[1])
-    #for i5 in range(len(QQ2)):
-        #print(QQ2[i5])
-    #print("-------------------------")
+    # Loại bỏ các phần tử giống nhau trong QQ2 lưu vào QQ3
     QQ3 = []
-# Duyệt qua từng phần tử trong mảng đa chiều
     for element in QQ2:
         if element not in QQ3:
             QQ3.append(element)
-    #for i7 in range(len(QQ3)):
-        #print(QQ3[i7])
-    #print("-------------------------")
+    # Lấy n phần tử đầu của QQ3 thay vào Q
     Q = QQ3[:n]
     x += 1
-for i6 in range(len(Q)):
-        print(Q[i6])
+for i in range(len(Q)):
+    print(Q[i])
+print("__________________________ASSIGNMENT_______________________")
+Assignment = Q[0][0]
+for i in range(len(Assignment)):
+    for j in range(len(Assignment[0])):
+        print(f"O[{i+1}][{j+1}]",Assignment[i][j])
+print("________________________SCHEMATE GEN 1_____________________")
+
+JSP(Assignment).schemata()
+wpm = JSP(Assignment).workloads_per_machine()
+print("WL/M = ", wpm)
 #-----------------------------[END]---------------------------------------------------------
