@@ -78,12 +78,15 @@ def gen2(Data):
     return S_2
 #Ham danh gia
 class JSP:
-    def __init__(self,gen):
+    def __init__(self,gen,job_priority):
         self.gen = gen
-        self.t = None
+        self.job_priority = job_priority
+        self.time_per_job = None
+        self.workload_per_machine = None
+        self.schemata = None
     #Xây dựng biểu đồ kế hoạch - ASSIGNMENT SCHEMATA
-    def schemata(self):
-        S = self.gen
+        S = gen
+        jp = job_priority
         x = len(S)
         y = len(S[0])
         z = len(S[0][0])
@@ -93,10 +96,14 @@ class JSP:
         S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
         for j in range(y):
             E1 = [0 for _ in range(x)]
-            for i in range(x):
+            for i in range(jp,x):
                 for k in range(z):
                     if S[i][j][k] == 1:
-                        E1[i] = [i,k,D[i][j][k]]
+                        E1.append([i, k, D[i][j][k]])
+            for i in range(0,jp):
+                for k in range(z):
+                    if S[i][j][k] == 1:
+                        E1.append([i, k, D[i][j][k]])
             E1 = [item for item in E1 if item != 0]
             E1 = sorted(E1, key=lambda x: x[2])
             for r in range(len(E1)):
@@ -106,117 +113,29 @@ class JSP:
                 t[i] = max(t[i], m[k]) + D[i][j][k]
                 m[k] = max(t[i], m[k])
                 Wk[k] = Wk[k] + D[i][j][k]
-        for i in range(x):
-            for j in range(y):
-                print(f"J{[i+1]}{[j+1]}:", S2[i][j])
-    
-    #Xây dựng hàm đánh giá - EVALUATION
+        self.time_per_job = t
+        self.workload_per_machine = Wk
+        self.schemata = S2
+    def show_schemata(self):
+        SS = self.schemata
+        for i in range(len(SS)):
+            for j in range(len(SS[0])):
+                print(f"J{[i+1]}{[j+1]}:", SS[i][j])
     def makespans(self):
-        S = self.gen
-        x = len(S)
-        y = len(S[0])
-        z = len(S[0][0])
-        t = [0]*x
-        m = [0]*z
-        Wk = [0]*z
-        S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
-        for j in range(y):
-            E1 = [0 for _ in range(x)]
-            for i in range(x):
-                for k in range(z):
-                    if S[i][j][k] == 1:
-                        E1[i] = [i,k,D[i][j][k]]
-            E1 = [item for item in E1 if item != 0]
-            E1 = sorted(E1, key=lambda x: x[2])
-            for r in range(len(E1)):
-                i = E1[r][0]
-                k = E1[r][1]
-                S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
-                t[i] = max(t[i], m[k]) + D[i][j][k]
-                m[k] = max(t[i], m[k])
-                Wk[k] = Wk[k] + D[i][j][k]
-        return(max(t))
+        max_t = max(self.time_per_job)
+        return max_t
     def processing_time(self):
-        S = self.gen
-        x = len(S)
-        y = len(S[0])
-        z = len(S[0][0])
-        t = [0]*x
-        m = [0]*z
-        Wk = [0]*z
-        S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
-        for j in range(y):
-            E1 = [0 for _ in range(x)]
-            for i in range(x):
-                for k in range(z):
-                    if S[i][j][k] == 1:
-                        E1[i] = [i,k,D[i][j][k]]
-            E1 = [item for item in E1 if item != 0]
-            E1 = sorted(E1, key=lambda x: x[2])
-            for r in range(len(E1)):
-                i = E1[r][0]
-                k = E1[r][1]
-                S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
-                t[i] = max(t[i], m[k]) + D[i][j][k]
-                m[k] = max(t[i], m[k])
-                Wk[k] = Wk[k] + D[i][j][k]
-        return t
+        return self.time_per_job
     def workloads(self):
-        S = self.gen
-        x = len(S)
-        y = len(S[0])
-        z = len(S[0][0])
-        t = [0]*x
-        m = [0]*z
-        Wk = [0]*z
-        S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
-        for j in range(y):
-            E1 = [0 for _ in range(x)]
-            for i in range(x):
-                for k in range(z):
-                    if S[i][j][k] == 1:
-                        E1[i] = [i,k,D[i][j][k]]
-            E1 = [item for item in E1 if item != 0]
-            E1 = sorted(E1, key=lambda x: x[2])
-            for r in range(len(E1)):
-                i = E1[r][0]
-                k = E1[r][1]
-                S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
-                t[i] = max(t[i], m[k]) + D[i][j][k]
-                m[k] = max(t[i], m[k])
-                Wk[k] = Wk[k] + D[i][j][k]
-        return sum(Wk)
+        Workload = self.workload_per_machine
+        return sum(Workload)
     def workloads_per_machine(self):
-        S = self.gen
-        x = len(S)
-        y = len(S[0])
-        z = len(S[0][0])
-        t = [0]*x
-        m = [0]*z
-        Wk = [0]*z
-        S2 = [[[0 for k in range(z)] for j in range(y)] for i in range(x)]
-        for j in range(y):
-            E1 = [0 for _ in range(x)]
-            for i in range(x):
-                for k in range(z):
-                    if S[i][j][k] == 1:
-                        E1[i] = [i,k,D[i][j][k]]
-            E1 = [item for item in E1 if item != 0]
-            E1 = sorted(E1, key=lambda x: x[2])
-            for r in range(len(E1)):
-                i = E1[r][0]
-                k = E1[r][1]
-                S2[i][j][k] = (max(t[i], m[k]), max(t[i], m[k]) + D[i][j][k])
-                t[i] = max(t[i], m[k]) + D[i][j][k]
-                m[k] = max(t[i], m[k])
-                Wk[k] = Wk[k] + D[i][j][k]
-        return Wk
+        return self.workload_per_machine
 # Xay dung quan the
 def chromosome(Data_Input,loop):
     nE = []
     n = 0
     n2 = 0
-    dao_gen = 0
     while n < loop:
         EE = []
         EE = gen(Data_Input)
@@ -236,7 +155,7 @@ def chromosome(Data_Input,loop):
     E = [[0 for k in range(2)] for j in range(len(nE))]
     for i in range(len(nE)):
         E[i][0] = nE[i]
-        a = JSP(E[i][0])
+        a = JSP(E[i][0],0)
         E[i][1] = a.makespans()
     E1 = sorted(E, key=lambda tup: tup[1])
     return E1
@@ -297,7 +216,7 @@ def crossover(D,E):
 def mutation1(E,D):
     a = random.randint(0,len(E)-1)
     S = E[a][0]
-    value_S = JSP(S)
+    value_S = JSP(S,0)
     t = value_S.processing_time()
     max_pt = max(t)
     i = t.index(max_pt)
@@ -319,7 +238,7 @@ def mutation1(E,D):
 def mutation2(E):
     a = random.randint(0,len(E)-1)
     S = E[a][0]
-    value_S = JSP(S)
+    value_S = JSP(S,0)
     w = value_S.workloads_per_machine()
     max_wl = max(w)
     indices_of_max = [o for o, x in enumerate(w) if x == max_wl]
@@ -372,15 +291,15 @@ D = Data(values)    #Đưa dữ liệu vào mảng D
 E = chromosome(D,10000)    #Xây dựng quần thể (bộ nhiễm sắc thể choromosome(dữ liệu vào, số lượng gen mong muốn, số vòng lặp random))
 print(len(E))
 print("______________________________")
-n = 10
-c = 8
-m1 = 1
-m2 = 1
+n = 20
+c = 10
+m1 = 5
+m2 = 5
 x = 1
 #Lựa chọn quần thể
 Q = E[:n]
 #Lai ghép
-while x <= 2000:
+while x <= 1000:
     QQ = copy.deepcopy(Q)
     #Đột biến kiểu 1
     M1 = [0 for j in range(m1)]
@@ -403,7 +322,7 @@ while x <= 2000:
     Q2 = [[0 for j in range(2)] for k in range(n)]
     for i3 in range(len(Q2)):
         Q2[i3][0] = C1[i3]
-        Q2[i3][1] = JSP(C1[i3]).makespans()
+        Q2[i3][1] = JSP(C1[i3],0).makespans()
     # Gộp G2 vào tập quần thể ban đầu
     Q2.extend(QQ)
     # Sắp xếp các phần tử tỏng Q2 theo thứ tự tăng dần Cmax
@@ -424,8 +343,5 @@ for i in range(len(Assignment)):
     for j in range(len(Assignment[0])):
         print(f"O[{i+1}][{j+1}]",Assignment[i][j])
 print("________________________SCHEMATE GEN 1_____________________")
-
-JSP(Assignment).schemata()
-wpm = JSP(Assignment).workloads_per_machine()
-print("WL/M = ", wpm)
+JSP(Assignment,0).show_schemata()
 #-----------------------------[END]---------------------------------------------------------
