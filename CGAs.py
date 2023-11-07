@@ -5,6 +5,7 @@ import ortool as Or
 import crossover as Cr
 import mutation as Mu
 
+infinite_coefficient = 99
 #------------------------------[FUNCTION]------------------------------------
 
 def Data(input_value):
@@ -24,7 +25,7 @@ def chromosome(Data_Input,loop):
     n2 = 0
     while n < loop:
         EE = []
-        EE = AL.gen1(Data_Input,99)
+        EE = AL.gen1(Data_Input,infinite_coefficient)
         if EE not in nE :
             nE.append(EE)
             n = 0
@@ -32,7 +33,7 @@ def chromosome(Data_Input,loop):
             n += 1
     while n2 < loop:
         EE = []
-        EE = AL.gen2(Data_Input,99)
+        EE = AL.gen2(Data_Input,infinite_coefficient)
         if EE not in nE :
             nE.append(EE)
             n2 = 0
