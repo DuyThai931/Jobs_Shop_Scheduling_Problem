@@ -1,19 +1,34 @@
-import random
 import copy
 import AL
 import ortool as Or
 import crossover as Cr
 import mutation as Mu
-import numpy as np
 
 #------------------------------[FUNCTION]------------------------------------
 
 def Read_Data(filename='data.txt'):
-    Structure_data = np.genfromtxt(filename, dtype=int, max_rows=1)
-    Data = np.genfromtxt(filename, dtype = int, skip_header = 1)
-    Data = Data.reshape(Structure_data[0], Structure_data[1], Structure_data[2])
-    Data.tolist()
-    return Data
+    # Khởi tạo mảng để lưu dữ liệu
+    data_rows = []
+    # Đọc từng dòng của tệp và thêm vào mảng data_rows
+    with open(filename, 'r') as file:
+        for line in file:
+            # Tách các giá trị trong dòng và chuyển thành số nguyên
+            row = list(map(int, line.strip().split()))
+            data_rows.append(row)
+    # Chuyển mảng thành mảng NumPy
+    structure = [[[0 for i in range(data_rows[0][2])] for j in range(data_rows[0][1])] for k in range(data_rows[0][0])]
+    for i in range(len(data_rows)-1):
+        no = 1
+        for j in range(data_rows[i+1][0]):
+            for k in range(no + 1,2*data_rows[i+1][no]+no,2):
+                structure[i][j][data_rows[i+1][k]-1] = data_rows[i+1][k+1]
+            no = no + 2*data_rows[i+1][no]+1
+    for i in range(len(structure)):
+        for j in range(len(structure[i])):
+            for k in range(len(structure[i][j])):
+                if structure[i][j][k] == 0:
+                    structure[i][j][k] = 99
+    return structure
 
 def chromosome(Data_Input,loop):
     nE = []
@@ -47,7 +62,7 @@ def chromosome(Data_Input,loop):
 
 def Genetic_Algorithms(Data_in,population_size,generation,crossover_probability,mutation1_probability,mutation2_probability):
     D = Data_in    #Đưa dữ liệu vào mảng D
-    E = chromosome(D,10000)    #Xây dựng quần thể (bộ nhiễm sắc thể choromosome(dữ liệu vào, số lượng gen mong muốn, số vòng lặp random))
+    E = chromosome(D,10)    #Xây dựng quần thể (bộ nhiễm sắc thể choromosome(dữ liệu vào, số lượng gen mong muốn, số vòng lặp random))
     
     c = int(population_size*crossover_probability)
     m1 = int(population_size*mutation1_probability)
@@ -101,11 +116,12 @@ def Genetic_Algorithms(Data_in,population_size,generation,crossover_probability,
         # Lấy n phần tử đầu của QQ3 thay vào Q
         Q = QQ3[:population_size]
         if Q[0][1] <= Cmax_find or Q[0][2] <= WL_find:
-            if Q[0][0] not in Assignment :
-                Cmax_find = Q[0][1]
-                WL_find = Q[0][2]
-                Assignment.append(Q[0][0])
-                Assf = Or.format_data(Q[0][0],D)
+            Cmax_find = Q[0][1]
+            WL_find = Q[0][2]
+            Assf = Or.format_data(Q[0][0],D)
+            WL = Or.JSP_OR(Assf).workloads_per_machine()
+            if WL not in Assignment:
+                Assignment.append(WL)
                 print(f"________________________BEST SOLUTION IN GENERATION {x}_______________________")
                 for i in range(len(Assf)):
                     print(Assf[i])
@@ -117,6 +133,6 @@ def Genetic_Algorithms(Data_in,population_size,generation,crossover_probability,
                 y += 1
         x += 1
 #-----------------------------[MAIN]--------------------------------------------------------
-values = Read_Data('DT1.txt')
-Genetic_Algorithms(values,20,10,0.8,0.1,0.1)
+values = Read_Data('kacem4.txt')
+Genetic_Algorithms(values,1000,1000,1,0.5,0.5)
 #-----------------------------[END]---------------------------------------------------------
